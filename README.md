@@ -76,3 +76,80 @@ interface ListingAPI {
 }
 ```
 
+그 다음 전에 작성했던 코드를 아래와 같이 수정합니다.
+
+**Main.kt**
+
+```kotlin
+import api.EditsAPI
+import api.ListingAPI
+import com.google.auth.oauth2.ServiceAccountCredentials
+import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
+import kotlinx.coroutines.*
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.io.FileInputStream
+import kotlin.system.exitProcess
+
+fun main(args: Array<String>) {
+
+    runBlocking {
+        val token = getAccessToken()
+
+        val editsRetrofit = Retrofit.Builder()
+            .baseUrl("https://androidpublisher.googleapis.com/androidpublisher/v3/applications/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .addCallAdapterFactory(CoroutineCallAdapterFactory())
+            .client(OkHttpClient.Builder().build())
+            .build()
+            .create(EditsAPI::class.java)
+
+        val listingRetrofit=Retrofit.Builder()
+            .baseUrl("https://androidpublisher.googleapis.com/androidpublisher/v3/applications/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .addCallAdapterFactory(CoroutineCallAdapterFactory())
+            .client(OkHttpClient.Builder().build())
+            .build()
+            .create(ListingAPI::class.java)
+
+        val editInsertResponse = editsRetrofit.postInsertEdit("Bearer $token", "com.dpectrum.holymolysheet")
+
+        println("edit insert response code: ${editInsertResponse.code()}")
+        println("edit insert response body: ${editInsertResponse.body()}")
+
+        val editInsertBody= editInsertResponse.body() ?: exitProcess(0)
+
+
+
+
+        val editValidateResponse=editsRetrofit.postValidateEdit("Bearer $token","com.dpectrum.holymolysheet",editInsertBody.id)
+
+        println("edit validate response code: ${editValidateResponse.code()}")
+        println("edit validate response body: ${editValidateResponse.body()}")
+
+        val listingGetResponse=listingRetrofit.getEditsListing("Bearer $token", "com.dpectrum.holymolysheet",editInsertBody.id,"ko-KR")
+
+
+        println("listing get response code: ${listingGetResponse.code()}")
+        println("listing get response body: ${listingGetResponse.body()}")
+
+
+        exitProcess(0)
+    }
+
+
+}
+
+fun getAccessToken(): String {
+    val credentials =
+        ServiceAccountCredentials.fromStream(FileInputStream("/Users/hanmunhwi/Desktop/Google Play Console Key/pc-api-5791105689854140514-65-de5fdf8795d0.json"))
+            .createScoped(setOf("https://www.googleapis.com/auth/androidpublisher"))
+    credentials.refreshIfExpired()
+    return credentials.accessToken.tokenValue
+}
+
+```
+
+위와 같이 되었다면 앱의 기본 등록 정보인 listing을 받을 수 있습니다.
+
