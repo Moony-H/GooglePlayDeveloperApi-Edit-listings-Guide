@@ -32,7 +32,6 @@ listings는 앱의 제목, 자세한 설명, 간단한 설명 등 기본적인 �
 **Listing.kt**
 
 ```kotlin
-package data.postbody
 
 import com.google.gson.annotations.SerializedName
 
