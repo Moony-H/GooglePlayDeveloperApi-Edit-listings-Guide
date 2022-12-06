@@ -1,0 +1,1 @@
+# GooglePlayDeveloperApiEdit-listingsGuide
